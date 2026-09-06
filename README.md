@@ -17,7 +17,12 @@ Every listing card on an Etsy search page gets scored against a few signals, all
 
 A listing needs enough combined signal to cross your chosen sensitivity threshold before it's hidden — nothing is a single-signal instant judgment except an exact match on the known-shops list. You can always click "Show anyway," and doing so remembers that shop so it won't be hidden for you again.
 
-This is a heuristic filter, not a certainty machine. It will have false positives (an honest seller who over-uses emoji) and false negatives (a well-disguised AI-mill listing). Sensitivity is adjustable in the popup for this reason.
+This is a heuristic filter, not a certainty machine, and it will never catch everything. Two structural limits worth knowing:
+
+- **The blocklist is a point-in-time snapshot.** AI-mill shops get banned and re-open under new names constantly; the shared list lags reality and only grows as fast as people report new shops.
+- **Detection only runs on the search-results title.** Etsy's search cards don't expose the full description, so a listing that keeps its title clean but stuffs the description with mega-bundle claims won't be caught. Titles are still the highest-signal spot, since sellers optimize them for search.
+
+In practice this means: obvious mega-bundle listings ("500+ patterns," keyword-stuffed titles) get caught at the default **Medium** sensitivity; subtler ones may need **High**, and some will always slip through regardless. Expect false positives too (a genuine seller who over-uses emoji) — that's what "Show anyway" is for.
 
 ## Install (unpacked, for now)
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Filter for Etsy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Hides likely AI-mass-produced listings and known AI-mill shops from Etsy search results, so real handmade items are easier to find.",
   "permissions": ["storage", "alarms"],
   "host_permissions": ["*://*.etsy.com/*", "https://raw.githubusercontent.com/*"],

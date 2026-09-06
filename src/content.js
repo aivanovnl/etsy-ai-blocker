@@ -10,12 +10,31 @@
     stats: { today: "", hiddenToday: 0, hiddenTotal: 0 },
   };
 
-  const THRESHOLDS = { low: 6, medium: 3, high: 2 };
+  const THRESHOLDS = { low: 8, medium: 3, high: 2 };
 
   const EMOJI_RE = /\p{Extended_Pictographic}/gu;
   const MARKDOWN_ARTIFACT_RE = /\*\*[^*]{3,}\*\*/;
-  const BIG_BUNDLE_RE =
-    /\b([2-9]\d{2,}|\d{4,})\+?\s*(amigurumi|crochet|patterns?|designs?|templates?|clipart|svg|png|printables?|bundle|mega\s*pack)\b/i;
+  // A big standalone count like "500+" or "12,000+" anywhere in the title.
+  const BIG_NUMBER_RE = /\b(\d{1,3}(?:,\d{3})+|\d{2,})\+/;
+  // Any of these words appearing anywhere in the title (not necessarily next to the number).
+  const BUNDLE_CATEGORY_RE =
+    /\b(amigurumi|crochet|patterns?|designs?|templates?|clipart|printables?|svg|png|fonts?|planners?|stickers?|bundle|mega\s*pack|collection)\b/i;
+  const SUPERLATIVE_RE = /\b(ultimate|mega|huge|massive|giant|complete\s+collection|all[- ]in[- ]one)\b/i;
+
+  function normalizeNumber(str) {
+    return parseInt(str.replace(/,/g, ""), 10);
+  }
+
+  // Removes digit-grouping commas ("12,000" -> "12000") so they aren't
+  // mistaken for keyword-stuffing separators when counting commas.
+  function stripNumberCommas(s) {
+    let prev;
+    do {
+      prev = s;
+      s = s.replace(/(\d),(\d{3})\b/, "$1$2");
+    } while (s !== prev);
+    return s;
+  }
 
   let settings = null;
   let blocklistSet = new Set();
@@ -78,19 +97,41 @@
       total += 10;
       reasons.push("Shop is on the known AI-mill list");
     }
-    if (title && BIG_BUNDLE_RE.test(title)) {
-      total += 2;
-      reasons.push("Suspiciously large “mega bundle” pattern count in the title");
+
+    if (title) {
+      const numMatch = title.match(BIG_NUMBER_RE);
+      const hasCategory = BUNDLE_CATEGORY_RE.test(title);
+      if (numMatch && hasCategory) {
+        const n = normalizeNumber(numMatch[1]);
+        const weight = n >= 200 ? 3 : n >= 50 ? 2 : 1;
+        total += weight;
+        reasons.push(`Suspiciously large item count in the title ("${numMatch[0]}")`);
+      }
+
+      if (SUPERLATIVE_RE.test(title)) {
+        total += 1;
+        reasons.push("Hype/superlative marketing language in the title");
+      }
+
+      if (MARKDOWN_ARTIFACT_RE.test(title)) {
+        total += 3;
+        reasons.push("Unedited AI text formatting (**asterisks**) left in the title");
+      }
+
+      const emojiCount = (title.match(EMOJI_RE) || []).length;
+      if (emojiCount >= 3) {
+        total += 1;
+        reasons.push("Unusually heavy emoji use in the title");
+      }
+
+      const pipeSegments = title.split("|").length - 1;
+      const commaSegments = stripNumberCommas(title).split(",").length - 1;
+      if (pipeSegments >= 2 || commaSegments >= 4) {
+        total += 1;
+        reasons.push("Keyword-stuffed title (many | or , separated phrases)");
+      }
     }
-    if (title && MARKDOWN_ARTIFACT_RE.test(title)) {
-      total += 3;
-      reasons.push("Unedited AI text formatting (**asterisks**) left in the title");
-    }
-    const emojiCount = title ? (title.match(EMOJI_RE) || []).length : 0;
-    if (emojiCount >= 3) {
-      total += 1;
-      reasons.push("Unusually heavy emoji use in the title");
-    }
+
     return { total, reasons };
   }
 
