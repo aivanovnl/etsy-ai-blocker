@@ -1,0 +1,60 @@
+.aif-hidden {
+  position: relative !important;
+}
+
+.aif-hidden > *:not(.aif-overlay) {
+  visibility: hidden !important;
+}
+
+.aif-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(250, 247, 245, 0.97);
+  border: 1px solid #e8a598;
+  border-radius: 12px;
+}
+
+.aif-overlay-inner {
+  text-align: center;
+  max-width: 90%;
+}
+
+.aif-overlay-title {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #b3410f;
+  margin-bottom: 4px;
+}
+
+.aif-overlay-reasons {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: #6b5750;
+  line-height: 1.4;
+}
+
+.aif-overlay-reasons li::before {
+  content: "· ";
+}
+
+.aif-show-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #d0c9c4;
+  background: #fff;
+  color: #2b2320;
+  cursor: pointer;
+}
+
+.aif-show-btn:hover {
+  background: #f2f0ee;
+}
