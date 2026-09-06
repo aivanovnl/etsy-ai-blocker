@@ -18,7 +18,7 @@
   const BIG_NUMBER_RE = /\b(\d{1,3}(?:,\d{3})+|\d{2,})\+/;
   // Any of these words appearing anywhere in the title (not necessarily next to the number).
   const BUNDLE_CATEGORY_RE =
-    /\b(amigurumi|crochet|patterns?|designs?|templates?|clipart|printables?|svg|png|fonts?|planners?|stickers?|bundle|mega\s*pack|collection)\b/i;
+    /\b(amigurumi|crochet|patterns?|designs?|templates?|clipart|printables?|svg|png|jpg|fonts?|planners?|stickers?|bundle|mega\s*pack|collection|journal(?:s|ing)?|wall\s*art|sublimation|embroidery|coloring\s*pages?|invitations?|graphics?)\b/i;
   const SUPERLATIVE_RE = /\b(ultimate|mega|huge|massive|giant|complete\s+collection|all[- ]in[- ]one)\b/i;
   const PRICE_RE = /(?:CA\$|C\$|US\$|NZ\$|AU\$|\$|£|€)\s?(\d+(?:[.,]\d{2})?)/;
   const DISCOUNT_RE = /\((\d{1,3})%\s*off\)/i;
@@ -145,9 +145,10 @@
 
       const pipeSegments = title.split("|").length - 1;
       const commaSegments = stripNumberCommas(title).split(",").length - 1;
-      if (pipeSegments >= 2 || commaSegments >= 4) {
+      const dashSegments = (title.match(/\s-\s/g) || []).length;
+      if (pipeSegments >= 2 || commaSegments >= 4 || dashSegments >= 2) {
         total += 1;
-        reasons.push("Keyword-stuffed title (many | or , separated phrases)");
+        reasons.push("Keyword-stuffed title (many |, - or , separated phrases)");
       }
     }
 
