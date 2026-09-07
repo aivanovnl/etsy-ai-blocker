@@ -14,18 +14,39 @@
 
   const EMOJI_RE = /\p{Extended_Pictographic}/gu;
   const MARKDOWN_ARTIFACT_RE = /\*\*[^*]{3,}\*\*/;
-  // A big standalone count like "500+" or "12,000+" anywhere in the title.
-  const BIG_NUMBER_RE = /\b(\d{1,3}(?:,\d{3})+|\d{2,})\+/;
+  // A big count with an explicit "+" anywhere in the title, e.g. "500+" or "12,000+".
+  const PLUS_NUMBER_RE = /\b(\d{1,3}(?:,\d{3})+|\d{2,})\+/;
+  // A bare huge count with no "+" — only counted when >=1000, since a bare
+  // "100 stickers" is plausible for a real seller but "10000 clipart" isn't.
+  const BARE_BIG_NUMBER_RE = /\b(\d{1,3}(?:,\d{3})+|\d{4,})\b(?!\+)/;
   // Any of these words appearing anywhere in the title (not necessarily next to the number).
   const BUNDLE_CATEGORY_RE =
     /\b(amigurumi|crochet|patterns?|designs?|templates?|clipart|printables?|svg|png|jpg|fonts?|planners?|stickers?|bundle|mega\s*pack|collection|journal(?:s|ing)?|wall\s*art|sublimation|embroidery|coloring\s*pages?|invitations?|graphics?)\b/i;
   const SUPERLATIVE_RE = /\b(ultimate|mega|huge|massive|giant|complete\s+collection|all[- ]in[- ]one)\b/i;
+  // "Whole shop / whole store / lifetime access" style listings sell access
+  // to an entire (often ever-growing) catalog instead of one real item —
+  // phrasing a genuine handmade listing essentially never uses.
+  const WHOLE_SHOP_RE =
+    /\b(whole\s+(shop|store)|lifetime\s+access|shop\s+access\s+forever|unlimited\s+(shop\s+)?access|all\s+access\s+shop\s+pass|(all\s+)?past\s+and\s+future|current\s*(&|and)\s*future)\b/i;
+  // Resale-licensing jargon (Private/Master Label/Resell Rights) — a term
+  // from the digital-product-reselling world, never used by a genuine maker.
+  const PLR_MRR_RE = /\b(PLR|MRR)\b/;
   const PRICE_RE = /(?:CA\$|C\$|US\$|NZ\$|AU\$|\$|£|€)\s?(\d+(?:[.,]\d{2})?)/;
   const DISCOUNT_RE = /\((\d{1,3})%\s*off\)/i;
   const SHOP_REPEAT_MIN = 4;
 
   function normalizeNumber(str) {
     return parseInt(str.replace(/,/g, ""), 10);
+  }
+
+  // Finds the most relevant big-count match in a title: prefers an explicit
+  // "N+" (any size from 20 up), falls back to a bare 1000+ count.
+  function findBigNumber(title) {
+    const plus = title.match(PLUS_NUMBER_RE);
+    if (plus) return { match: plus, hasPlus: true };
+    const bare = title.match(BARE_BIG_NUMBER_RE);
+    if (bare && normalizeNumber(bare[1]) >= 1000) return { match: bare, hasPlus: false };
+    return null;
   }
 
   // Removes digit-grouping commas ("12,000" -> "12000") so they aren't
@@ -117,14 +138,24 @@
     }
 
     if (title) {
-      const m = title.match(BIG_NUMBER_RE);
       const hasCategory = BUNDLE_CATEGORY_RE.test(title);
-      if (m && hasCategory) {
-        numMatch = m;
-        const n = normalizeNumber(m[1]);
-        const weight = n >= 200 ? 3 : n >= 50 ? 2 : 1;
+      const big = findBigNumber(title);
+      if (big && hasCategory) {
+        numMatch = big.match;
+        const n = normalizeNumber(big.match[1]);
+        const weight = !big.hasPlus ? 3 : n >= 200 ? 3 : n >= 50 ? 2 : 1;
         total += weight;
-        reasons.push(`Suspiciously large item count in the title ("${m[0]}")`);
+        reasons.push(`Suspiciously large item count in the title ("${big.match[0]}")`);
+      }
+
+      if (WHOLE_SHOP_RE.test(title)) {
+        total += 2;
+        reasons.push('"Whole shop / lifetime access" listing — sells access to a catalog, not one real item');
+      }
+
+      if (PLR_MRR_RE.test(title)) {
+        total += 2;
+        reasons.push("Resale-licensing jargon (PLR/MRR) in the title — not language a maker uses");
       }
 
       if (SUPERLATIVE_RE.test(title)) {
