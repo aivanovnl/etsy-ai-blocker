@@ -42,11 +42,12 @@ https://aivanovnl.github.io/etsy-ai-blocker/privacy.html
 ## Single purpose description (required by CWS review)
 This extension's single purpose is to let users hide listings on Etsy.com search results that show strong signs of being AI-mass-produced, based on the listing's own title, shop, and price.
 
-## Permission justifications (required by CWS review)
-- **storage**: to save the user's enabled/disabled state, sensitivity setting, and personal shop list locally.
-- **alarms**: to schedule a once-daily background refresh of the shared blocklist file.
-- **host permission on *.etsy.com**: to read listing titles/prices on Etsy search pages, which is the extension's entire function.
-- **host permission on raw.githubusercontent.com**: to fetch the public, static shared blocklist JSON file.
+## Permission justifications (required by CWS review — Privacy practices tab)
+- **storage**: Used to save the user's enabled/disabled toggle, sensitivity setting, hidden-item counters, and any shop names the user personally adds or un-hides. All stored locally on-device via chrome.storage.local; nothing is synced or transmitted.
+- **alarms**: Used to schedule a once-per-day background check for an updated version of the shared, static blocklist file, so it refreshes without requiring a new extension release.
+- **Host permission on *.etsy.com**: The extension's entire function is reading listing titles, shop names, and prices on Etsy search-result pages in order to score and optionally hide likely AI-mass-produced listings. It does not read or modify any other site.
+- **Host permission on raw.githubusercontent.com**: Used solely to fetch one public, static JSON file (the shared shop blocklist) once a day. No user data is included in this request.
+- **Remote code use**: This extension does NOT download or execute remote code. The daily fetch from raw.githubusercontent.com retrieves a static JSON data file (a list of shop-name strings) that is only ever compared against text with `Array.includes`/`Set.has` — it is never evaluated, injected as a script, or executed in any way.
 
 ## Screenshots needed (1280x800 or 640x400, at least 1, up to 5)
 Use real screenshots from your own working install — the one you already sent showing the "Hidden · looks AI-mass-produced" panel on the SuzyFlowArt listing is a great first one. A couple more ideas:
